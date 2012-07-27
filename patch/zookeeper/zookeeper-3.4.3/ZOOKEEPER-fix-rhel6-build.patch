@@ -1,0 +1,268 @@
+Index: src/contrib/zkpython/src/packages/rpm/spec/zkpython.spec
+===================================================================
+--- src/contrib/zkpython/src/packages/rpm/spec/zkpython.spec	(リビジョン 1366298)
++++ src/contrib/zkpython/src/packages/rpm/spec/zkpython.spec	(作業コピー)
+@@ -16,7 +16,6 @@
+ #
+ # RPM Spec file for ZooKeeper version @version@
+ #
+-
+ %define name         zkpython
+ %define version      @version@
+ %define release      @package.release@
+@@ -29,54 +28,38 @@
+ %define _final_name   @final.name@
+ %define _python_lib   @python.lib@
+ %define debug_package %{nil}
++%define __check_files %{nil}
+ 
+-# Disable brp-java-repack-jars for aspect J
+-%define __os_install_post    \
+-    /usr/lib/rpm/redhat/brp-compress \
+-    %{!?__debug_package:/usr/lib/rpm/redhat/brp-strip %{__strip}} \
+-    /usr/lib/rpm/redhat/brp-strip-static-archive %{__strip} \
+-    /usr/lib/rpm/redhat/brp-strip-comment-note %{__strip} %{__objdump} \
+-    /usr/lib/rpm/brp-python-bytecompile %{nil}
+-
+-# RPM searches perl files for dependancies and this breaks for non packaged perl lib
+-# like thrift so disable this
+-%define _use_internal_dependency_generator 0
+-
+-Summary: ZooKeeper python binding library
+-Group: Development/Libraries
+-License: Apache License, Version 2.0
+-URL: http://zookeeper.apache.org/
+-Vendor: Apache Software Foundation
+-Name: %{name}
+-Version: %{version}
+-Release: %{release} 
+-Source0: %{_python_lib}
+-Prefix: %{_prefix}
+-Buildroot: %{_build_dir}
++Name:          %{name}
++Version:       %{version}
++Release:       %{release}
++Summary:       ZooKeeper python binding library
++Group:         Development/Libraries
++License:       Apache License, Version 2.0
++URL:           http://zookeeper.apache.org/
++Source:        %{_python_lib}
++Prefix:        %{_prefix}
++Buildroot:     %{_tmppath}/%{name}-%{version}-%{release}-root
+ Requires: zookeeper-lib == %{version}
+-AutoReqProv: no
+-Provides: zkpython
+-
+ %description
+ ZooKeeper python binding library
+ 
+ %prep
+-tar fxz %{_python_lib} -C %{_build_dir}
++tar fxz %{_python_lib} -C %{_topdir}/BUILD
+ 
+ %build
+ 
+-#########################
+-#### INSTALL SECTION ####
+-#########################
+ %install
++tar fxz %{_python_lib} -C %{_topdir}/BUILD
+ 
+-%pre
++install -m755 -d %{buildroot}%{_libdir}/python2.6/site-packages
+ 
+-%post
++install %{_topdir}/BUILD%{_libdir}/python2.6/site-packages/zookeeper.so $RPM_BUILD_ROOT%{_libdir}/python2.6/site-packages/zookeeper.so
++install %{_topdir}/BUILD%{_libdir}/python2.6/site-packages/ZooKeeper-0.4-py2.6.egg-info $RPM_BUILD_ROOT%{_libdir}/python2.6/site-packages/ZooKeeper-0.4-py2.6.egg-info
+ 
+-%preun
++%clean
+ 
+-%files 
+-%defattr(-,root,root)
+-%{_prefix}
+-
++%files
++%defattr(-,root,root,-)
++%{_libdir}/python2.6/site-packages/zookeeper.so
++%{_libdir}/python2.6/site-packages/ZooKeeper-0.4-py2.6.egg-info
+Index: src/packages/rpm/spec/zookeeper.spec
+===================================================================
+--- src/packages/rpm/spec/zookeeper.spec	(リビジョン 1366298)
++++ src/packages/rpm/spec/zookeeper.spec	(作業コピー)
+@@ -14,33 +14,38 @@
+ #   limitations under the License.
+ 
+ #
+-# RPM Spec file for ZooKeeper version @version@
++# RPM Spec file for ZooKeeper version 3.4.3
+ #
+ 
+ %define name         zookeeper
+-%define version      @version@
+-%define release      @package.release@
++%define version      3.4.3
++%define release      1
+ 
+ # Installation Locations
+-%define _prefix      @package.prefix@
++%define _prefix      /usr
+ %define _bin_dir     %{_prefix}/bin
+-%define _conf_dir    @package.conf.dir@
++%define _conf_dir    /etc/zookeeper
+ %define _include_dir %{_prefix}/include
+ %define _lib_dir     %{_prefix}/lib
+ %define _lib64_dir   %{_prefix}/lib64
++%ifarch amd64 x86_64
++%define _lib_root_dir %{_prefix}/lib64
++%else
++%define _lib_root_dir %{_prefix}/lib
++%endif
+ %define _libexec_dir %{_prefix}/libexec
+-%define _log_dir     @package.log.dir@
++%define _log_dir     /var/log/zookeeper
+ %define _man_dir     %{_prefix}/man
+-%define _pid_dir     @package.pid.dir@
++%define _pid_dir     /var/run/zookeeper
+ %define _sbin_dir    %{_prefix}/sbin
+ %define _share_dir   %{_prefix}/share/zookeeper
+ %define _src_dir     %{_prefix}/src
+-%define _var_dir     @package.var.dir@
++%define _var_dir     /var/lib/zookeeper
+ 
+ # Build time settings
+-%define _build_dir    @package.build.dir@
+-%define _final_name   @final.name@
+-%define _c_lib        @c.lib@
++%define _build_dir    /tmp/zookeeper_package_build_root/BUILDROOT
++%define _final_name   zookeeper-3.4.3
++%define _c_lib        /root/zookeeper/svn/zookeeper-3.4.3/build/zookeeper-3.4.3-lib.tar.gz
+ %define debug_package %{nil}
+ 
+ # Disable brp-java-repack-jars for aspect J
+@@ -88,50 +93,44 @@
+ ZooKeeper C client library for communicating with ZooKeeper Server.
+ 
+ %prep
+-%setup -D -b 1 -n %{_final_name}
+-%setup -D -a 0 -n %{_final_name}
++%setup -D -a 1 -n %{_final_name}
+ 
+ %build
+-mkdir -p ${RPM_BUILD_DIR}%{_prefix}
+-mkdir -p ${RPM_BUILD_DIR}%{_bin_dir}
+-mkdir -p ${RPM_BUILD_DIR}%{_include_dir}
+-mkdir -p ${RPM_BUILD_DIR}%{_lib_dir}
+-%ifarch amd64 x86_64
+-mkdir -p ${RPM_BUILD_DIR}%{_lib64_dir}
+-%endif
+-mkdir -p ${RPM_BUILD_DIR}%{_libexec_dir}
+-mkdir -p ${RPM_BUILD_DIR}%{_log_dir}
+-mkdir -p ${RPM_BUILD_DIR}%{_conf_dir}
+-mkdir -p ${RPM_BUILD_DIR}%{_man_dir}
+-mkdir -p ${RPM_BUILD_DIR}%{_pid_dir}
+-mkdir -p ${RPM_BUILD_DIR}%{_sbin_dir}
+-mkdir -p ${RPM_BUILD_DIR}%{_share_dir}
+-mkdir -p ${RPM_BUILD_DIR}%{_var_dir}
+-mkdir -p ${RPM_BUILD_DIR}/etc/init.d
+ 
+-cp ${RPM_BUILD_DIR}/%{_final_name}/src/packages/rpm/init.d/zookeeper ${RPM_BUILD_DIR}/etc/init.d/zookeeper
+-cp ${RPM_BUILD_DIR}/%{_final_name}/src/packages/update-zookeeper-env.sh ${RPM_BUILD_DIR}/%{_final_name}/sbin/update-zookeeper-env.sh
+-chmod 0755 ${RPM_BUILD_DIR}/%{_final_name}/sbin/*
+-chmod 0755 ${RPM_BUILD_DIR}/etc/init.d/zookeeper
+-
+ #########################
+ #### INSTALL SECTION ####
+ #########################
+ %install
++install -m755 -d ${RPM_BUILD_ROOT}%{_bin_dir}
++install -m755 -d ${RPM_BUILD_ROOT}%{_lib_root_dir}
++install -m755 -d ${RPM_BUILD_ROOT}%{_include_dir}/zookeeper
++install -m755 -d ${RPM_BUILD_ROOT}%{_libexec_dir}
++install -m755 -d ${RPM_BUILD_ROOT}%{_share_dir}
++install -m755 -d ${RPM_BUILD_ROOT}%{_conf_dir}
++install -m755 -d ${RPM_BUILD_ROOT}%{_sbin_dir}
++install -m755 -d ${RPM_BUILD_ROOT}%{_var_dir}
++install -m755 -d ${RPM_BUILD_ROOT}%{_log_dir}
++install -m755 -d ${RPM_BUILD_ROOT}%{_pid_dir}
++install -m755 -d ${RPM_BUILD_ROOT}/etc/init.d
++install -m755 ${RPM_BUILD_DIR}/%{_final_name}/src/packages/rpm/init.d/zookeeper ${RPM_BUILD_ROOT}/etc/init.d/zookeeper
++install -m755 ${RPM_BUILD_DIR}/%{_final_name}/src/packages/update-zookeeper-env.sh ${RPM_BUILD_ROOT}/%{_sbin_dir}/update-zookeeper-env.sh
++install -m755 ${RPM_BUILD_DIR}/%{_final_name}/usr/include/zookeeper/* ${RPM_BUILD_ROOT}%{_prefix}/include/zookeeper
++install -m755 ${RPM_BUILD_DIR}/%{_final_name}/usr/bin/* ${RPM_BUILD_ROOT}%{_prefix}/bin
++install -m755 ${RPM_BUILD_DIR}/%{_final_name}/usr/lib/* ${RPM_BUILD_ROOT}%{_lib_root_dir}
++
+ pushd ${RPM_BUILD_DIR}
+-mv ${RPM_BUILD_DIR}/%{_final_name}/bin/* ${RPM_BUILD_DIR}%{_bin_dir}
+-mv ${RPM_BUILD_DIR}/%{_final_name}/libexec/* ${RPM_BUILD_DIR}%{_libexec_dir}
+-mv ${RPM_BUILD_DIR}/%{_final_name}/share/zookeeper/* ${RPM_BUILD_DIR}%{_share_dir}
+-mv ${RPM_BUILD_DIR}/%{_final_name}/conf/* ${RPM_BUILD_DIR}%{_conf_dir}
+-mv ${RPM_BUILD_DIR}/%{_final_name}/sbin/* ${RPM_BUILD_DIR}%{_sbin_dir}
+-cp -f ${RPM_BUILD_DIR}%{_conf_dir}/zoo_sample.cfg ${RPM_BUILD_DIR}%{_conf_dir}/zoo.cfg
++mv ${RPM_BUILD_DIR}/%{_final_name}/bin/* ${RPM_BUILD_ROOT}%{_bin_dir}
++mv ${RPM_BUILD_DIR}/%{_final_name}/libexec/* ${RPM_BUILD_ROOT}%{_libexec_dir}
++mv ${RPM_BUILD_DIR}/%{_final_name}/share/zookeeper/* ${RPM_BUILD_ROOT}%{_share_dir}
++mv ${RPM_BUILD_DIR}/%{_final_name}/conf/* ${RPM_BUILD_ROOT}%{_conf_dir}
++mv ${RPM_BUILD_DIR}/%{_final_name}/sbin/* ${RPM_BUILD_ROOT}%{_sbin_dir}
++mv ${RPM_BUILD_ROOT}%{_conf_dir}/zoo_sample.cfg ${RPM_BUILD_ROOT}%{_conf_dir}/zoo.cfg
+ popd ${RPM_BUILD_DIR}
+-rm -rf ${RPM_BUILD_DIR}/%{_final_name}
+ 
+ %pre
+-getent group hadoop 2>/dev/null >/dev/null || /usr/sbin/groupadd -r hadoop
++getent group zookeeper 2>/dev/null >/dev/null || /usr/sbin/groupadd -r zookeeper
+ 
+-/usr/sbin/useradd --comment "ZooKeeper" --shell /bin/bash -M -r --groups hadoop --home %{_share_dir} zookeeper 2> /dev/null || :
++/usr/sbin/useradd --comment "ZooKeeper" --shell /bin/bash -M -r --groups zookeeper --home %{_share_dir} zookeeper 2> /dev/null || :
+ 
+ %post
+ bash ${RPM_INSTALL_PREFIX0}/sbin/update-zookeeper-env.sh \
+@@ -150,18 +149,42 @@
+        --var-dir=${RPM_INSTALL_PREFIX4} \
+        --uninstall
+ 
++%clean
++
+ %files 
+ %defattr(-,root,root)
+-%attr(0755,root,hadoop) %{_log_dir}
+-%attr(0775,root,hadoop) %{_pid_dir}
+-%attr(0775,root,hadoop) /etc/init.d/zookeeper
++%attr(0755,root,zookeeper) %{_log_dir}
++%attr(0775,root,zookeeper) %{_pid_dir}
++%attr(0775,root,zookeeper) /etc/init.d/zookeeper
+ %config(noreplace) %{_conf_dir}/*
+-%{_prefix}
++%{_prefix}/bin/README.txt
++%{_prefix}/bin/zkCleanup.sh
++%{_prefix}/bin/zkCli.cmd
++%{_prefix}/bin/zkCli.sh
++%{_prefix}/bin/zkEnv.cmd
++%{_prefix}/bin/zkEnv.sh
++%{_prefix}/bin/zkServer.cmd
++%{_prefix}/bin/zkServer.sh
++%{_prefix}/libexec/*
++%{_prefix}/sbin/*
++%{_prefix}/share/*
+ 
+ %post lib
+ /sbin/ldconfig
+ 
+ %files lib
+ %defattr(-,root,root)
+-%{_prefix}/lib/*
+-%{_prefix}/bin
++%{_lib_root_dir}/libzookeeper_mt.a
++%{_lib_root_dir}/libzookeeper_mt.so
++%{_lib_root_dir}/libzookeeper_mt.so.2.0.0
++%{_lib_root_dir}/libzookeeper_st.la
++%{_lib_root_dir}/libzookeeper_st.so.2
++%{_lib_root_dir}/libzookeeper_mt.la
++%{_lib_root_dir}/libzookeeper_mt.so.2
++%{_lib_root_dir}/libzookeeper_st.a
++%{_lib_root_dir}/libzookeeper_st.so
++%{_lib_root_dir}/libzookeeper_st.so.2.0.0
++%{_prefix}/bin/cli_mt
++%{_prefix}/bin/cli_st
++%{_prefix}/bin/load_gen
++%{_prefix}/include/zookeeper/*
