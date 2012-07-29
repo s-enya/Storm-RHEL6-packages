@@ -1,7 +1,7 @@
 Index: src/contrib/zkpython/src/packages/rpm/spec/zkpython.spec
 ===================================================================
---- src/contrib/zkpython/src/packages/rpm/spec/zkpython.spec	(リビジョン 1366298)
-+++ src/contrib/zkpython/src/packages/rpm/spec/zkpython.spec	(作業コピー)
+--- src/contrib/zkpython/src/packages/rpm/spec/zkpython.spec	(revision 1366342)
++++ src/contrib/zkpython/src/packages/rpm/spec/zkpython.spec	(working copy)
 @@ -16,7 +16,6 @@
  #
  # RPM Spec file for ZooKeeper version @version@
@@ -88,9 +88,9 @@ Index: src/contrib/zkpython/src/packages/rpm/spec/zkpython.spec
 +%{_libdir}/python2.6/site-packages/ZooKeeper-0.4-py2.6.egg-info
 Index: src/packages/rpm/spec/zookeeper.spec
 ===================================================================
---- src/packages/rpm/spec/zookeeper.spec	(リビジョン 1366298)
-+++ src/packages/rpm/spec/zookeeper.spec	(作業コピー)
-@@ -14,33 +14,38 @@
+--- src/packages/rpm/spec/zookeeper.spec	(revision 1366342)
++++ src/packages/rpm/spec/zookeeper.spec	(working copy)
+@@ -14,7 +14,7 @@
  #   limitations under the License.
  
  #
@@ -99,17 +99,7 @@ Index: src/packages/rpm/spec/zookeeper.spec
  #
  
  %define name         zookeeper
--%define version      @version@
--%define release      @package.release@
-+%define version      3.4.3
-+%define release      1
- 
- # Installation Locations
--%define _prefix      @package.prefix@
-+%define _prefix      /usr
- %define _bin_dir     %{_prefix}/bin
--%define _conf_dir    @package.conf.dir@
-+%define _conf_dir    /etc/zookeeper
+@@ -28,6 +28,11 @@
  %define _include_dir %{_prefix}/include
  %define _lib_dir     %{_prefix}/lib
  %define _lib64_dir   %{_prefix}/lib64
@@ -119,27 +109,8 @@ Index: src/packages/rpm/spec/zookeeper.spec
 +%define _lib_root_dir %{_prefix}/lib
 +%endif
  %define _libexec_dir %{_prefix}/libexec
--%define _log_dir     @package.log.dir@
-+%define _log_dir     /var/log/zookeeper
+ %define _log_dir     @package.log.dir@
  %define _man_dir     %{_prefix}/man
--%define _pid_dir     @package.pid.dir@
-+%define _pid_dir     /var/run/zookeeper
- %define _sbin_dir    %{_prefix}/sbin
- %define _share_dir   %{_prefix}/share/zookeeper
- %define _src_dir     %{_prefix}/src
--%define _var_dir     @package.var.dir@
-+%define _var_dir     /var/lib/zookeeper
- 
- # Build time settings
--%define _build_dir    @package.build.dir@
--%define _final_name   @final.name@
--%define _c_lib        @c.lib@
-+%define _build_dir    /tmp/zookeeper_package_build_root/BUILDROOT
-+%define _final_name   zookeeper-3.4.3
-+%define _c_lib        /root/zookeeper/svn/zookeeper-3.4.3/build/zookeeper-3.4.3-lib.tar.gz
- %define debug_package %{nil}
- 
- # Disable brp-java-repack-jars for aspect J
 @@ -62,7 +67,7 @@
  Group: Development/Libraries
  Name: %{name}
