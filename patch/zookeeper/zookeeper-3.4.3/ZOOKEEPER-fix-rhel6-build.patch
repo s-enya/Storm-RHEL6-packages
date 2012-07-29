@@ -41,7 +41,7 @@ Index: src/contrib/zkpython/src/packages/rpm/spec/zkpython.spec
 -Buildroot: %{_build_dir}
 +Name:          %{name}
 +Version:       %{version}
-+Release:       %{release}
++Release:       %{release}%{?dist}
 +Summary:       ZooKeeper python binding library
 +Group:         Development/Libraries
 +License:       Apache License, Version 2.0
@@ -140,6 +140,15 @@ Index: src/packages/rpm/spec/zookeeper.spec
  %define debug_package %{nil}
  
  # Disable brp-java-repack-jars for aspect J
+@@ -62,7 +67,7 @@
+ Group: Development/Libraries
+ Name: %{name}
+ Version: %{version}
+-Release: %{release} 
++Release: %{release}%{?dist} 
+ Source0: %{_final_name}.tar.gz
+ Source1: %{_final_name}-lib.tar.gz
+ Prefix: %{_prefix}
 @@ -88,50 +93,44 @@
  ZooKeeper C client library for communicating with ZooKeeper Server.
  
