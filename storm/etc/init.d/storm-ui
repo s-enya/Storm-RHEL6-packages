@@ -1,0 +1,86 @@
+#!/bin/bash
+#
+#       /etc/rc.d/init.d/storm-ui
+#
+#       start/stop/status storm-ui
+#
+
+. /etc/init.d/functions
+
+STORM_NIMBUS_CONF="/etc/sysconfig/storm/storm.conf"
+if [ -f "$STORM_NIMBUS_CONF" ]; then
+    . $STORM_NIMBUS_CONF
+fi
+
+PROGNAME=storm-ui
+
+PROG="java \
+    -$JVM_TYPE \
+    -Xmx$SUPERVISOR_JVM_MEMORY \
+    -Djava.library.path=\"$JAVA_LIBRARY_PATH\" \
+    -Dstorm.options=\"$STORM_OPTIONS\" \
+    -Dstorm.home=\"$STORM_HOME\" \
+    $LOG4J_CONF \
+    -Dlogfile.name=$STORM_LOG/ui.log \
+    $SUPERVISOR_JVM_OPTS \
+    -cp \"$CLASSPATH\" 
+    backtype.storm.ui.core &"
+
+PIDFILE=/var/run/$PROGNAME.pid
+LOCKFILE=${LOCKFILE-/var/lock/subsys/$PROGNAME}
+
+RETVAL=0
+
+start() {
+        if [ -a $LOCKFILE ];
+        then
+                echo "$PROGNAME appears to be running, or has crashed, or was not stopped properly."
+                echo "check $PIDFILE, and remove $LOCKFILE to start again."
+                return -1;
+        fi
+
+        echo -n "Starting $PROGNAME: "
+        daemon  --pidfile $PIDFILE $PROG 
+        RETVAL=$?
+        echo
+        [ $RETVAL = 0 ] && touch ${LOCKFILE}
+        return $RETVAL
+}
+ 
+stop() {
+
+        if [ -a $PIDFILE ]
+        then
+                echo -n "Shutting down $PROGNAME: "
+                killproc -p $PIDFILE
+                RETVAL=$?
+                echo
+                [ $RETVAL = 0 ] && rm -f ${LOCKFILE} ${PIDFILE}
+        else
+                echo "$PROGNAME appears not to be running."
+        fi
+}
+ 
+case "$1" in
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    status)
+        status $PROGNAME
+        ;;
+    restart)
+        stop
+        start
+        ;;
+    reload)
+        restart
+        ;;
+    *)
+        echo "Usage: $PROGNAME {start|stop|status|reload|restart}"
+        exit 1
+        ;;
+esac
+exit $?

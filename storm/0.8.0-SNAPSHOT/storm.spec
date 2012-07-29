@@ -12,7 +12,7 @@ Summary:       Storm Complex Event Processing
 Group:         Applications/Internet
 License:       EPLv1
 URL:           http://storm-project.net/
-Source0:        https://github.com/downloads/nathanmarz/storm/storm-%{version}.zip
+Source0:       https://github.com/downloads/nathanmarz/storm/storm-%{version}.zip
 Prefix:        %{_prefix}
 Buildroot:     %{_tmppath}/%{name}-%{version}-%{release}-root
 BuildRequires: gcc, make, gcc-c++, libstdc++-devel
@@ -39,8 +39,12 @@ unzip %{SOURCE0}
 
 %install
 rm -rf $RPM_BUILD_ROOT
+install -m755 -d $RPM_BUILD_ROOT/opt/storm-%{version}
+install -m755 -d $RPM_BUILD_ROOT/storm/conf.d 
+install -m755 -d $RPM_BUILD_ROOT/etc/init.d
+install -m755 -d $RPM_BUILD_ROOT/var/log/storm 
+install -m755 -d $RPM_BUILD_ROOT/opt/storm-%{version}
+mv $RPM_BUILD_DIR/* $RPM_BUILD_ROOT/opt/storm-%{version}
 
 %files
 %defattr(-,root,root)
-
-
