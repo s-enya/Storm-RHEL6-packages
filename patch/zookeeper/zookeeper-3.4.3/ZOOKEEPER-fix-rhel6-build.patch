@@ -90,15 +90,6 @@ Index: src/packages/rpm/spec/zookeeper.spec
 ===================================================================
 --- src/packages/rpm/spec/zookeeper.spec	(revision 1366342)
 +++ src/packages/rpm/spec/zookeeper.spec	(working copy)
-@@ -14,7 +14,7 @@
- #   limitations under the License.
- 
- #
--# RPM Spec file for ZooKeeper version @version@
-+# RPM Spec file for ZooKeeper version 3.4.3
- #
- 
- %define name         zookeeper
 @@ -28,6 +28,11 @@
  %define _include_dir %{_prefix}/include
  %define _lib_dir     %{_prefix}/lib
